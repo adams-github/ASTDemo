@@ -176,7 +176,6 @@ public class DataOperationTranslator extends TreeTranslator {
         for (JCTree jcTree : jcClassDecl.defs) {
             if (jcTree instanceof JCTree.JCVariableDecl){
                 JCTree.JCVariableDecl jcVariableDecl = (JCTree.JCVariableDecl) jcTree;
-                mMessager.printMessage(Diagnostic.Kind.NOTE, jcVariableDecl.vartype.toString().equals("String") + "");
                 if (jcVariableDecl.vartype.toString().equals("String")){
                     stringJcVariableDeclList = stringJcVariableDeclList.append(jcVariableDecl);
                 }else{
