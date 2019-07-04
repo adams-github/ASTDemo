@@ -1,0 +1,1 @@
+include ':app', ':ast_processor', ':annotations'

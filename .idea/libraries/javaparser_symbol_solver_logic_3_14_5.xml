@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="javaparser-symbol-solver-logic-3.14.5">
+    <CLASSES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.javaparser/javaparser-symbol-solver-logic/3.14.5/3d3a7142881e4125cc48354953578b398a37ea71/javaparser-symbol-solver-logic-3.14.5.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.github.javaparser/javaparser-symbol-solver-logic/3.14.5/5e7612a6151b7263b5db74bb0dbb4a4b336ba32e/javaparser-symbol-solver-logic-3.14.5-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
