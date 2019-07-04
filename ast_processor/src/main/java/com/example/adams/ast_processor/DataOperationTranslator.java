@@ -9,6 +9,9 @@ import com.sun.tools.javac.tree.TreeTranslator;
 import com.sun.tools.javac.util.List;
 import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
+
+import java.util.Objects;
+
 import javax.annotation.processing.Messager;
 import javax.tools.Diagnostic;
 
@@ -76,7 +79,7 @@ public class DataOperationTranslator extends TreeTranslator {
         JCTree.JCVariableDecl param = treeMaker.VarDef(
                         treeMaker.Modifiers(Flags.PARAMETER), jcVariableDecl.name, jcVariableDecl.vartype, null);
         param.pos = jcVariableDecl.pos;//设置形参这一句不能少，不然会编译报错(java.lang.AssertionError: Value of x -1)
-        parameters = parameters.append(param);
+        parameters = parameters.append(param);//添加参数；例如 int age
         JCTree.JCStatement jcStatement = treeMaker.Exec(treeMaker.Assign(
                         treeMaker.Select(treeMaker.Ident(names.fromString("this")), jcVariableDecl.name),
                         treeMaker.Ident(jcVariableDecl.name)));
@@ -181,7 +184,6 @@ public class DataOperationTranslator extends TreeTranslator {
                 }else{
                     notStringJcVariableDeclList = notStringJcVariableDeclList.append(jcVariableDecl);
                 }
-
             }
         }
 
@@ -194,23 +196,28 @@ public class DataOperationTranslator extends TreeTranslator {
 
 
         List<JCTree.JCStatement> jcStatementList = List.nil();
+        // if (this == o) return false;
         JCTree.JCStatement zeroth = treeMaker.If(treeMaker.Binary(JCTree.Tag.EQ, treeMaker.Ident(names.fromString("this")), treeMaker.Ident(names.fromString("o"))),
                 treeMaker.Return(treeMaker.Literal(false)), null);
         jcStatementList = jcStatementList.append(zeroth);
-        JCTree.JCStatement first = treeMaker.If(treeMaker.Unary(JCTree.Tag.NOT, treeMaker.TypeTest(treeMaker.Ident(names.fromString("o")), memberAccess("com.example.adams.astdemo.TestBean"))),
+        //if (!(o instanceof TestBean)) return false;
+        JCTree.JCStatement first = treeMaker.If(treeMaker.Unary(JCTree.Tag.NOT, treeMaker.TypeTest(treeMaker.Ident(names.fromString("o")), treeMaker.Ident(jcClassDecl.name))),
                 treeMaker.Return(treeMaker.Literal(false)), null);
         jcStatementList = jcStatementList.append(first);
+        //TestBean testBean = (TestBean)o;
         JCTree.JCVariableDecl second = treeMaker.VarDef(
-                treeMaker.Modifiers(0), names.fromString("testBean"), memberAccess("com.example.adams.astdemo.TestBean"),
-                treeMaker.TypeCast(memberAccess("com.example.adams.astdemo.TestBean"), treeMaker.Ident(names.fromString("o"))));
+                treeMaker.Modifiers(0), names.fromString(toLowerCaseFirstOne(jcClassDecl.name.toString())), treeMaker.Ident(jcClassDecl.name),
+                treeMaker.TypeCast(treeMaker.Ident(jcClassDecl.name), treeMaker.Ident(names.fromString("o"))));
         jcStatementList = jcStatementList.append(second);
 
         JCTree.JCExpression jcExpression = null;
         for (int i = 0; i < notStringJcVariableDeclList.size(); i++) {
             JCTree.JCExpression isEq = treeMaker.Binary(JCTree.Tag.EQ,
                     treeMaker.Ident(notStringJcVariableDeclList.get(i).name),
-                    treeMaker.Select(treeMaker.Ident(names.fromString("testBean")), notStringJcVariableDeclList.get(i).name));
+                    treeMaker.Select(treeMaker.Ident(names.fromString(toLowerCaseFirstOne(jcClassDecl.name.toString()))),
+                            notStringJcVariableDeclList.get(i).name));
             if (jcExpression != null){
+                //&& this.age == testBean.age
                 jcExpression = treeMaker.Binary(JCTree.Tag.AND, jcExpression, isEq);
             }else{
                 jcExpression = isEq;
@@ -223,15 +230,17 @@ public class DataOperationTranslator extends TreeTranslator {
             var1 = var1.append(memberAccess("java.lang.String"));
             List<JCTree.JCExpression> var2 = List.nil();
             var2 = var2.append(treeMaker.Ident(stringJcVariableDeclList.get(i).name));
-            var2 = var2.append(treeMaker.Select(treeMaker.Ident(names.fromString("testBean")), stringJcVariableDeclList.get(i).name));
+            var2 = var2.append(treeMaker.Select(treeMaker.Ident(names.fromString(toLowerCaseFirstOne(jcClassDecl.name.toString()))),
+                    stringJcVariableDeclList.get(i).name));
             JCTree.JCExpression isEq = treeMaker.Apply(var1, memberAccess("java.util.Objects.equals"), var2);
             if (jcExpression != null){
+                //&& Objects.equals(this.nickName, testBean.nickName);
                 jcExpression = treeMaker.Binary(JCTree.Tag.AND, jcExpression, isEq);
             }else{
                 jcExpression = isEq;
             }
         }
-        JCTree.JCStatement fourth = treeMaker.Return(jcExpression);
+        JCTree.JCStatement fourth = treeMaker.Return(jcExpression);//return语句
         jcStatementList = jcStatementList.append(fourth);
         JCTree.JCBlock jcBlock = treeMaker.Block(0, jcStatementList);
 
@@ -240,7 +249,7 @@ public class DataOperationTranslator extends TreeTranslator {
         JCTree.JCVariableDecl param = treeMaker.VarDef(
                 treeMaker.Modifiers(Flags.PARAMETER), names.fromString("o"), memberAccess("java.lang.Object"), null);
         param.pos = jcClassDecl.pos;
-        parameters = parameters.append(param);
+        parameters = parameters.append(param);//添加参数 Object o
         List<JCTree.JCExpression> throwsClauses = List.nil();//异常抛出列表
         JCTree.JCExpression defaultValue = null;
         JCTree.JCMethodDecl jcMethodDecl = treeMaker.MethodDef(jcModifiers, name, retrunType, methodGenericParams, parameters, throwsClauses, jcBlock, defaultValue);
@@ -289,6 +298,14 @@ public class DataOperationTranslator extends TreeTranslator {
             type = memberAccess("java.lang.Byte");
         }
         return type;
+    }
+
+    //首字母转小写
+    public static String toLowerCaseFirstOne(String s){
+        if(Character.isLowerCase(s.charAt(0)))
+            return s;
+        else
+            return (new StringBuilder()).append(Character.toLowerCase(s.charAt(0))).append(s.substring(1)).toString();
     }
 
 
