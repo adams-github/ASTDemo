@@ -77,12 +77,12 @@ public class DataOperationTranslator extends TreeTranslator {
         Name name = setterMethodName(jcVariableDecl);// setXxx()
         List<JCTree.JCVariableDecl> parameters = List.nil();//参数列表
         JCTree.JCVariableDecl param = treeMaker.VarDef(
-                        treeMaker.Modifiers(Flags.PARAMETER), jcVariableDecl.name, jcVariableDecl.vartype, null);
+                treeMaker.Modifiers(Flags.PARAMETER), jcVariableDecl.name, jcVariableDecl.vartype, null);
         param.pos = jcVariableDecl.pos;//设置形参这一句不能少，不然会编译报错(java.lang.AssertionError: Value of x -1)
         parameters = parameters.append(param);//添加参数；例如 int age
         JCTree.JCStatement jcStatement = treeMaker.Exec(treeMaker.Assign(
-                        treeMaker.Select(treeMaker.Ident(names.fromString("this")), jcVariableDecl.name),
-                        treeMaker.Ident(jcVariableDecl.name)));
+                treeMaker.Select(treeMaker.Ident(names.fromString("this")), jcVariableDecl.name),
+                treeMaker.Ident(jcVariableDecl.name)));
         List<JCTree.JCStatement> jcStatementList = List.nil();
         jcStatementList = jcStatementList.append(jcStatement);
         JCTree.JCBlock jcBlock = treeMaker.Block(0, jcStatementList);
@@ -201,13 +201,13 @@ public class DataOperationTranslator extends TreeTranslator {
                 treeMaker.Return(treeMaker.Literal(false)), null);
         jcStatementList = jcStatementList.append(zeroth);
         //if (!(o instanceof TestBean)) return false;
-        JCTree.JCStatement first = treeMaker.If(treeMaker.Unary(JCTree.Tag.NOT, treeMaker.TypeTest(treeMaker.Ident(names.fromString("o")), treeMaker.Ident(jcClassDecl.name))),
+        JCTree.JCStatement first = treeMaker.If(treeMaker.Unary(JCTree.Tag.NOT, treeMaker.TypeTest(treeMaker.Ident(names.fromString("o")), memberAccess(jcClassDecl.sym.toString()))),
                 treeMaker.Return(treeMaker.Literal(false)), null);
         jcStatementList = jcStatementList.append(first);
         //TestBean testBean = (TestBean)o;
         JCTree.JCVariableDecl second = treeMaker.VarDef(
-                treeMaker.Modifiers(0), names.fromString(toLowerCaseFirstOne(jcClassDecl.name.toString())), treeMaker.Ident(jcClassDecl.name),
-                treeMaker.TypeCast(treeMaker.Ident(jcClassDecl.name), treeMaker.Ident(names.fromString("o"))));
+                treeMaker.Modifiers(0), names.fromString(toLowerCaseFirstOne(jcClassDecl.name.toString())), memberAccess(jcClassDecl.sym.toString()),
+                treeMaker.TypeCast(memberAccess(jcClassDecl.sym.toString()), treeMaker.Ident(names.fromString("o"))));
         jcStatementList = jcStatementList.append(second);
 
         JCTree.JCExpression jcExpression = null;
